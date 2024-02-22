@@ -1,0 +1,11 @@
+{
+    "Lua.diagnostics.globals": [
+        "fetchData"
+    ],
+    "Lua.workspace.library": [
+        "c:\\Program Files (x86)\\Steam\\steamapps\\common\\assettocorsa/extension/internal/lua-sdk/ac_apps"
+    ],
+    "Lua.workspace.preloadFileSize": 2000,
+    "Lua.runtime.version": "LuaJIT",
+    "Lua.runtime.builtin": {}
+}
