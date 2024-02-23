@@ -3,6 +3,8 @@ require "globals"
 require "common"
 require "logs"
 require "sounds"
+require "leaderboard"
+
 
 function Now()
     return os.time()
@@ -16,7 +18,6 @@ function HasReachedTime(timeToReach)
     return Now() >= timeToReach
 end
 
-local _leaderboards = {}
 
 local _timeSinceFetch = 0 
 local _fetchDelay = 15
@@ -28,7 +29,7 @@ local _loadedCalled = false
 local _readyCalled = false
 local _showMainWindow = false
 local _localWindowDrawn = false
--- local _fadingInLevel    = 0
+local _leaderboardFetched = false
 
 local _gotImage = false
 local _live = false
@@ -56,101 +57,8 @@ local _lineTC = nil
 local _mainArea = nil ---@type Area
 local _winArea = nil ---@type Area
 local _winInnerArea = nil ---@type Area
+local _leaderboard = nil ---@type Leaderboard
 
-function ConvertToLuaTable(jsonString)
-    -- Remove the brackets at the start and end of the JSON string
-    jsonString = jsonString:sub(2, -2)
-
-    -- Split the string into individual user entries
-    local entries = {}
-    local pattern = '{(.-)}'
-    for entry in jsonString:gmatch(pattern) do
-        table.insert(entries, entry)
-    end
-
-    -- Parse each entry
-    local users = {}
-    for _, entry in ipairs(entries) do
-        local user = {}
-        
-        -- Extract and assign each field to the user table
-        for key, value in entry:gmatch('"([^"]+)":"?([^",}]+)"?') do
-            if key and value then
-                -- Convert JSON keys to Lua table fields
-                key = key:gsub('avatar_url', 'avatar_url')
-                value = value:gsub('\\/', '/')
-                
-                -- Attempt to convert numeric values
-                if tonumber(value) then
-                    user[key] = tonumber(value)
-                else
-                    user[key] = value
-                end
-            end
-        end
-        
-        -- Add the parsed user to the users table
-        table.insert(users, user)
-    end
-    
-    return users
-end
-function fetchData()
-    web.get('https://iconx.world/events/get_lap_times.php?event_id=685&num_to_show=5', function(err, response)
-        if err then
-            LogError("Failed to fetch data")
-            
-            
-
-        else 
-            local parsedData = ConvertToLuaTable(response.body)
-            for i, user in ipairs(parsedData) do
-                _leaderboards[i] = {
-                    name = user.name,
-                    date = user.date,
-                    lapTime = user.lap_time,
-                }
-            end
-            for i,user in ipairs(_leaderboards) do
-                LogDebug('user #' ..i)
-                LogDebug('name:' ..user.name)
-                LogDebug('date:' ..user.date)
-                LogDebug('lapTime:' ..user.lapTime)
-            end
-        end
-        
-    end)
-end
-
--- Assuming _leaderboards is a table with user data, and ui.draw* functions are available
-function DrawLeaderboard()
-    local startX = _uiWinPos.x -- The starting X coordinate inside the UI box
-    local startY = _uiWinPos.y -- The starting Y coordinate inside the UI box for the leaderboard
-    local lineHeight = 30 -- The height of each line in the leaderboard
-
-    -- Loop through the leaderboard entries and draw them
-    for i, user in ipairs(_leaderboards) do
-        -- Calculate the Y position of the current line
-        local lineY = startY + (i - 1) * lineHeight
-
-        -- Draw the user's name
-        ui.drawText(user.name, vec2(startX, lineY), rgbm(1.0, 1.0, 1.0, 0.8))
-
-        -- Draw the user's date
-        ui.drawText(user.date, vec2(startX + 100, lineY), rgbm(1.0, 1.0, 1.0, 0.8))
-
-        -- Draw the user's lap time
-        ui.drawText( FormatLapTime(user.lapTime),vec2(startX + 200, lineY),rgbm(1.0, 1.0, 1.0, 0.8))
-    end
-end
-
--- Function to format the lap time into a string
-function FormatLapTime(milliseconds)
-    local minutes = math.floor(milliseconds / 60000)
-    local seconds = math.floor((milliseconds % 60000) / 1000)
-    local millis = milliseconds % 1000
-    return string.format("%02d:%02d.%03d", minutes, seconds, millis)
-end
 
 
 
@@ -187,7 +95,7 @@ function script.loaded()
     ac.onClientConnected(script.clientConnected)
     ac.onClientDisconnected(script.clientDisconnected)
     LogDebug("Loaded complete. Fetching real-time leaderboards...")
-    fetchData()
+    
 
 end
 
@@ -253,11 +161,16 @@ function script.update(dt)
     --- DEBUG_CODE_START
     -- end); if not callStatus then LogError("update> ex: " .. tostring(callErr)) end
     --- DEBUG_CODE_END
+    if not _leaderboardFetched then
+        _leaderboard = Leaderboard(rgbm(1.0, 1.0, 0.0, 1.0))
+        _leaderboard:fetch()
+         _leaderboardFetched = true 
 
+    end
      _timeSinceFetch = _timeSinceFetch + dt
     if _timeSinceFetch >= _fetchDelay then
-        fetchData()
-        _timeSinceFetch = 0;
+        _leaderboard:fetch()
+        _timeSinceFetch = 0
     end
  
 end
@@ -510,9 +423,11 @@ function script.drawUI()
             nil, false, col)
     end
     --- DEBUG_CODE_END
-
-    script.endDrawWindow()
-
+    if _leaderboardFetched then
+        _leaderboard:render(_mainArea)
+    end
+        script.endDrawWindow()
+    
     --- DEBUG_CODE_START
     -- end); if not callStatus then LogError("drawUI> ex: " .. tostring(callErr)) end
     --- DEBUG_CODE_END
@@ -535,7 +450,6 @@ function script.beginDrawWindow()
     -- LogDebugPeriodically("bdw", 1.0, "WS: " .. tostring(uiState.windowSize))
     ui.beginTransparentWindow('Icon.X', vec2(0, 0), uiState.windowSize, true)
   
-     DrawLeaderboard()
     
     -- ui.drawRect(vec2(0,0), uiState.windowSize, rgbm(0,1,1,0.5), 0, ui.CornerFlags.None, 10)
     
