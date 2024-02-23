@@ -161,14 +161,15 @@ function script.update(dt)
     --- DEBUG_CODE_START
     -- end); if not callStatus then LogError("update> ex: " .. tostring(callErr)) end
     --- DEBUG_CODE_END
-    if not _leaderboardFetched then
+    if not _leaderboardFetched then --initial leaderboard fetch
         _leaderboard = Leaderboard(rgbm(1.0, 1.0, 0.0, 1.0))
         _leaderboard:fetch()
          _leaderboardFetched = true 
+         _timeSinceFetch = 0
 
     end
-     _timeSinceFetch = _timeSinceFetch + dt
-    if _timeSinceFetch >= _fetchDelay then
+     _timeSinceFetch = _timeSinceFetch + dt ---timer for fetching leaderboard data
+    if _timeSinceFetch >= _fetchDelay then --fetch leaderboard data every 15 seconds and reset timer
         _leaderboard:fetch()
         _timeSinceFetch = 0
     end
@@ -423,7 +424,7 @@ function script.drawUI()
             nil, false, col)
     end
     --- DEBUG_CODE_END
-    if _leaderboardFetched then
+    if _leaderboardFetched then ---render leaderboard after data has been fetched from API
         _leaderboard:render(_mainArea)
     end
         script.endDrawWindow()

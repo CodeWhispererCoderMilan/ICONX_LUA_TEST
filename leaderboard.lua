@@ -60,13 +60,13 @@ end
 
 
 
--- Table class definition
+
 Leaderboard = class()
 ---@class Leaderboard
 ---@field rows table
 ---@field textColor table
 function Leaderboard:init(textColor)
-    self.textColor = textColor or rgbm(1.0, 1.0, 0.0, 1.0) -- Default white
+    self.textColor = textColor or rgbm(1.0, 1.0, 0.0, 1.0) -- Default neon yellow
     self.rows = {}
 
 end
@@ -76,7 +76,7 @@ function Leaderboard:addRow(...)
     table.insert(self.rows, {...})
 end
 
-function Leaderboard:fetch()
+function Leaderboard:fetch() --fetches the data from the API
     self.rows = {}
     web.get('https://iconx.world/events/get_lap_times.php?event_id=685&num_to_show=5'
     , function(err, response)
@@ -93,9 +93,9 @@ function Leaderboard:fetch()
     end)
 end
 
-function Leaderboard:render(area)
-    local startX = area.x1 -- The starting X coordinate inside the UI box
-    local startY = area.y1 -- The starting Y coordinate inside the UI box for the leaderboard
+function Leaderboard:render(area)   --rendering function w Area instance of overlay parameter
+    local startX = area.x1 
+    local startY = area.y1 
     local lineHeight = (area:height())/#self.rows -- The height of each line in the leaderboard
 
     -- Loop through the leaderboard entries and draw them
