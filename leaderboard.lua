@@ -1,6 +1,7 @@
 require "class"
 require "common"
 require "logs"
+require "globals"
 
 function ConvertToLuaTable(jsonString) -- converts JSON object to lua table
     -- Remove the brackets at the start and end of the JSON string
@@ -64,12 +65,11 @@ end
 
 function Leaderboard:fetch() -- fetches the data from the API
     self.rows = {}
-    web.get('https://iconx.world/events/get_lap_times.php?event_id=685&num_to_show=5', function(err, response)
+    web.get(LeaderboardUrl, function(err, response)
         if err then
             LogError("Error fetching data: " .. err)
             return
         else
-            self:addRow("avatar", "Name", "Date", "Lap Time")
             local parsedData = ConvertToLuaTable(response.body)
             for i, item in ipairs(parsedData) do
                 -- Assuming item has 'name', 'date', 'lapTime' fields
@@ -79,36 +79,34 @@ function Leaderboard:fetch() -- fetches the data from the API
     end)
 end
 
-function Leaderboard:render(area) -- rendering function w Area instance of overlay parameter
-    local startX = area.x1
-    local startY = area.y1
-    local lineHeight = (area:height()) / #self.rows -- The height of each line in the leaderboard
+function Leaderboard:render(area)
+    local visibleRows = 3 -- Adjust based on the desired number of rows visible at once
+    local lineHeight = area:height() / visibleRows
+    -- Adjust startY based on scrollOffset
+    local startY = area.y1 - ScrollOffset
 
-    -- Loop through the leaderboard entries and draw them
+    -- Loop through the leaderboard entries and draw them if they are within the visible area
     for i, user in ipairs(self.rows) do
         -- Calculate the Y position of the current line
         local lineY = startY + (i - 1) * lineHeight
 
-        if(i ==1) then
-            ui.drawText(user[1], vec2(startX, lineY), self.textColor)
-        else
+        -- Check if the current line is within the visible area
+        if lineY + lineHeight > area.y1 and lineY < area.y1 + area:height() then
             if ui.isImageReady(user[1]) then
-
-                    ui.drawImageQuad(user[1], vec2(startX, lineY), vec2(startX  + lineHeight*9/10, lineY), vec2(startX  + lineHeight*9/10, lineY + lineHeight*9/10), vec2(startX, lineY+lineHeight*9/10))
+                ui.drawImageQuad(user[1], vec2(area.x1, lineY), vec2(area.x1 + lineHeight * 9/10, lineY), vec2(area.x1 + lineHeight * 9/10, lineY + lineHeight * 9/10), vec2(area.x1, lineY + lineHeight * 9/10))
             else
                 LogDebugPeriodically("du_wi", 3, "Waiting for avatar image...")
-                return
             end
+
+            -- Draw the user's name, date, and lap time within the specified columns
+            local nameX = area.x1 + (area:width()) / 3
+            local dateX = area.x1 + 2 * (area:width()) / 4
+            local lapTimeX = area.x1 + 3 * (area:width()) / 4
+
+            ui.drawText(user[2], vec2(nameX, lineY), self.textColor)
+            ui.drawText(user[3], vec2(dateX, lineY), self.textColor)
+            ui.drawText(user[4], vec2(lapTimeX, lineY), self.textColor)
         end
-            
-        -- Draw the user's name
-        ui.drawText(user[2], vec2(startX + (area:width()) / 4 - area:width()/10, lineY), self.textColor)
-
-        -- Draw the user's date
-        ui.drawText(user[3], vec2(startX + 2 * area:width() / 4, lineY), self.textColor)
-
-        -- Draw the user's lap time
-        ui.drawText(user[4], vec2(startX + 3 * area:width() / 4 + area:width()/10, lineY), self.textColor)
-        
     end
 end
+

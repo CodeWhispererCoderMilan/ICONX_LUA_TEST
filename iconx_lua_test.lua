@@ -21,6 +21,7 @@ end
 
 local _timeSinceFetch = 0 
 local _fetchDelay = 15
+local _maxScroll = 0
 
 local ZOOM_MIN_VALUE = 0.5
 local ZOOM_MAX_VALUE = 3.0
@@ -526,7 +527,11 @@ function script.handleUiInteraction()
             end
         end
     end
-
+    if not (ui.mouseWheel() == 0)and _mainArea:containsPoint(ui.mousePos()) and _leaderboardFetched then
+        ScrollOffset = ScrollOffset - ui.mouseWheel() * 2 -- Adjust 20 to change scroll speed
+        ScrollOffset = math.max(0, ScrollOffset) -- Prevent scrolling above the start
+        ScrollOffset = math.min(ScrollOffset, #_leaderboard.rows*_mainArea:height()/3) -- Prevent scrolling below the end
+    end
     if _dragState > 0 then
         if ui.isMouseReleased(ui.MouseButton.Left) then
             if _dragState == 2 and ui.keyboardButtonDown(ui.KeyIndex.Shift) then
