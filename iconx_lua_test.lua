@@ -361,7 +361,7 @@ function script.drawUI()
         script.ready()
         return
     end
-
+    
     local showUIKeyDown = ac.isKeyDown(ac.KeyIndex.Control) and ac.isKeyDown(ac.KeyIndex.D)
     if showUIKeyDown and _lastShowUiKeyDown ~= showUIKeyDown then
         _showUI = not _showUI
@@ -527,10 +527,11 @@ function script.handleUiInteraction()
             end
         end
     end
+
     if not (ui.mouseWheel() == 0)and _mainArea:containsPoint(ui.mousePos()) and _leaderboardFetched then
-        ScrollOffset = ScrollOffset - ui.mouseWheel() * 2 -- Adjust 20 to change scroll speed
+        ScrollOffset = ScrollOffset - ui.mouseWheel() * 20 -- Adjust 20 to change scroll speed
         ScrollOffset = math.max(0, ScrollOffset) -- Prevent scrolling above the start
-        ScrollOffset = math.min(ScrollOffset, #_leaderboard.rows*_mainArea:height()/3) -- Prevent scrolling below the end
+        ScrollOffset = math.min(ScrollOffset, (#_leaderboard.rows-4)*_mainArea:height()/3) -- Prevent scrolling below the end
     end
     if _dragState > 0 then
         if ui.isMouseReleased(ui.MouseButton.Left) then

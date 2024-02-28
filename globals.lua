@@ -6,7 +6,7 @@ ItalicFont          = nil
 BoldItalicFont      = nil
 ImagesBaseUrl       = ""
 MainImagePath       = ""
-ScrollOffset        = 0;
+ScrollOffset        = 0
 LeaderboardUrl      = 'https://iconx.world/events/get_lap_times.php?event_id=685&num_to_show=5'
 --- DEBUG_CODE_START
 DebugShowWheelsOut = true
