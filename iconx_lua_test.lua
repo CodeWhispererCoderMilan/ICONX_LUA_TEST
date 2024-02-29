@@ -21,7 +21,7 @@ end
 
 local _timeSinceFetch = 0 
 local _fetchDelay = 15
-local _maxScroll = 0
+
 
 local ZOOM_MIN_VALUE = 0.5
 local ZOOM_MAX_VALUE = 3.0
@@ -162,8 +162,8 @@ function script.update(dt)
     --- DEBUG_CODE_START
     -- end); if not callStatus then LogError("update> ex: " .. tostring(callErr)) end
     --- DEBUG_CODE_END
-    if not _leaderboardFetched then --initial leaderboard fetch
-        _leaderboard = Leaderboard(rgbm(1.0, 1.0, 0.0, 1.0))
+    if not _leaderboardFetched and _mainArea then  --initial leaderboard fetch
+        _leaderboard = Leaderboard(_mainArea)
         _leaderboard:fetch()
          _leaderboardFetched = true 
          _timeSinceFetch = 0
@@ -333,7 +333,6 @@ function script.updateWindowVars()
     local x1, y1 = _winInnerArea.x1 + uiXBorder, _titleLinePos.y2 + (logoYGap * 1.3)
     _mainArea = Area(x1, y1, _winInnerArea:width() - uiXBorder - uiXBorder,
         _winInnerArea:height() - titleH - (logoYGap * 2.9))
-
     _winBgPos:addToPos(_uiWinPos)
     _textLogoPos:addToPos(_uiWinPos)
     _titleLinePos:addToPos(_uiWinPos)
@@ -528,10 +527,10 @@ function script.handleUiInteraction()
         end
     end
 
-    if not (ui.mouseWheel() == 0)and _mainArea:containsPoint(ui.mousePos()) and _leaderboardFetched then
+    if not (ui.mouseWheel() == 0)and _leaderboard.leaderboardAuxArea:containsPoint(ui.mousePos()) and _leaderboardFetched then
         ScrollOffset = ScrollOffset - ui.mouseWheel() * 20 -- Adjust 20 to change scroll speed
         ScrollOffset = math.max(0, ScrollOffset) -- Prevent scrolling above the start
-        ScrollOffset = math.min(ScrollOffset, (#_leaderboard.rows-4)*_mainArea:height()/3) -- Prevent scrolling below the end
+        ScrollOffset = math.min(ScrollOffset, (#_leaderboard.rows-4)*(_leaderboard.leaderboardAuxArea:height()/3)) -- Prevent scrolling below the end
     end
     if _dragState > 0 then
         if ui.isMouseReleased(ui.MouseButton.Left) then
