@@ -105,8 +105,10 @@ function Leaderboard:render(area)
     scrollbarHeight = math.min(scrollbarHeight, self.leaderboardAuxArea:height())
 
     -- Adjust the scrollbar position based on the scroll offset
-
+    
     local scrollRatio = ScrollOffset / ((totalRows - visibleRows) * lineHeight)
+    -- use a parameter to change scroll system placement in Leaderboard box
+    local scrollYshift = lineHeight
     local maxScrollRatio = (#self.rows - 4) * (self.leaderboardAuxArea:height() / 3) /
                                ((totalRows - visibleRows) * lineHeight)
     local scrollPosition = scrollbarY1 + (scrollRatio * (self.leaderboardAuxArea:height() - scrollbarHeight)) -
@@ -119,11 +121,11 @@ function Leaderboard:render(area)
     local scrollBackgroundY2 = self.leaderboardAuxArea.y1 +
                                    (maxScrollRatio * (self.leaderboardAuxArea:height() - scrollbarHeight)) - lineHeight *
                                    1.1 + scrollbarHeight
-
+    
     -- Draw header text and background
     local headerNameX = self.leaderboardAuxArea.x1 + (self.leaderboardAuxArea:width()) / 5
     local headerLapTimeX = self.leaderboardAuxArea.x1 + 3 * (self.leaderboardAuxArea:width()) / 4
-    local headerPlaceX = self.leaderboardAuxArea.x1 - self.leaderboardAuxArea:width() / 10
+    local headerPlaceX = self.leaderboardAuxArea.x1 - self.leaderboardAuxArea:width() / 9
     local headerBackgroundX1 = self.leaderboardAuxArea.x1 - self.leaderboardAuxArea:width() / 8
     local headerBackgroundY1 = self.leaderboardAuxArea.y1 - lineHeight * 1.5
     local headerBackgroundX2 = scrollBackgroundX2
@@ -133,12 +135,20 @@ function Leaderboard:render(area)
     local LeaderboardBoxY1 = headerBackgroundY1
     local LeaderboardBoxX2 = scrollBackgroundX2
     local LeaderboardBoxY2 = self.leaderboardAuxArea.y1 + self.leaderboardAuxArea:height()*1.01
-
+    -- separator line points 
+    
+    local separateColumn1p1 = vec2(self.leaderboardAuxArea.x1 - self.fontSize*0.4, headerBackgroundY2)
+    local separateColumn1p2 = vec2(self.leaderboardAuxArea.x1 - self.fontSize*0.4, LeaderboardBoxY2)
+    local separateColumn2p1 = vec2(headerNameX - self.fontSize*0.45, headerBackgroundY2)
+    local separateColumn2p2 = vec2(headerNameX - self.fontSize*0.45, LeaderboardBoxY2)
+    local separateColumn3p1 = vec2(headerLapTimeX - self.fontSize*0.6, headerBackgroundY2)
+    local separateColumn3p2 = vec2(headerLapTimeX - self.fontSize*0.6, LeaderboardBoxY2)
+    -- Draw the background and header text
     ui.drawRectFilled(vec2(LeaderboardBoxX1, LeaderboardBoxY1), vec2(LeaderboardBoxX2, LeaderboardBoxY2),
         rgbm(0.0, 0.0, 0.0, 0.35))
     ui.drawRectFilled(vec2(headerBackgroundX1, headerBackgroundY1), vec2(headerBackgroundX2, headerBackgroundY2),
         rgbm(0.0, 0.0, 0.0, 0.5))
-    ui.dwriteDrawText("Place", self.fontSize, vec2(headerPlaceX, headerTextY1), rgbm(1, 1, 1, 1))
+    ui.dwriteDrawText("#", self.fontSize, vec2(headerPlaceX, headerTextY1), rgbm(1, 1, 1, 1))
     ui.dwriteDrawText("Username", self.fontSize, vec2(headerNameX, headerTextY1), rgbm(1, 1, 1, 1))
     ui.dwriteDrawText("Lap Time", self.fontSize, vec2(headerLapTimeX, headerTextY1), rgbm(1, 1, 1, 1))
     -- Loop through the leaderboard entries and draw them if they are within the visible self.leaderboardAuxArea
@@ -178,7 +188,11 @@ function Leaderboard:render(area)
     end
     -- Draw the scrollbar
     -- Draw scroll bar
-    ui.drawRectFilled(vec2(scrollBackgroundX1, scrollBackgroundY1), vec2(scrollBackgroundX2, scrollBackgroundY2),rgbm(0.0, 0.0, 0.0, 0.5))
-    ui.drawRectFilled(vec2(scrollbarX1, scrollPosition), vec2(scrollbarX2, scrollbarY2), rgbm(0.0, 0.0, 0.0, 1.0))
+    ui.drawRectFilled(vec2(scrollBackgroundX1, scrollBackgroundY1 + scrollYshift), vec2(scrollBackgroundX2, scrollBackgroundY2 + scrollYshift),rgbm(0.0, 0.0, 0.0, 0.5))
+    ui.drawRectFilled(vec2(scrollbarX1, scrollPosition + scrollYshift), vec2(scrollbarX2, scrollbarY2+ scrollYshift), rgbm(1, 1, 1, 0.7))
+    -- Draw separator lines to split table
+    ui.drawLine(separateColumn1p1, separateColumn1p2, rgbm(1, 1, 1, 0.4),self.fontsize)
+    ui.drawLine(separateColumn2p1, separateColumn2p2, rgbm(1, 1, 1, 0.4),self.fontsize)
+    ui.drawLine(separateColumn3p1, separateColumn3p2, rgbm(1, 1, 1, 0.4),self.fontsize)
 end
 
